@@ -1,0 +1,53 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+
+int x = 10;
+int y = 10;
+
+int velocitatX = 2;
+int velocitatY = 2;
+
+void setup() {
+
+  Serial.begin(115200);
+
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("Error OLED");
+    while(true);
+  }
+
+  display.clearDisplay();
+}
+
+void loop() {
+
+  display.clearDisplay();
+
+  display.drawRect(x, y, 20, 20, WHITE);
+
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(x + 3, y + 7);
+  display.print("VG");
+
+  x += velocitatX;
+  y += velocitatY;
+
+  if (x <= 0 || x >= SCREEN_WIDTH - 20) {
+    velocitatX = -velocitatX;
+  }
+
+  if (y <= 0 || y >= SCREEN_HEIGHT - 20) {
+    velocitatY = -velocitatY;
+  }
+
+  display.display();
+
+  delay(20);
+}

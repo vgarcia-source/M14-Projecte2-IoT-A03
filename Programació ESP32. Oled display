@@ -1,53 +1,111 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
 #include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include <LiquidCrystal_I2C.h>
 
-#define SCREEN_WIDTH 128
-#define SCREEN_HEIGHT 64
+// LCD I2C
+LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+// WiFi
+const char* ssid = "Wokwi-GUEST";
+const char* password = "";
 
-int x = 10;
-int y = 10;
+// URL
+const char* url = "http://worldtime.timezone.io/api/timezone/Europe/Madrid";
 
-int velocitatX = 2;
-int velocitatY = 2;
+void connectarWiFi() {
+
+  Serial.println("Connectant al WiFi...");
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Connectant...");
+  lcd.setCursor(0, 1);
+  lcd.print("WiFi");
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password, 6);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\nWiFi connectat!");
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("WiFi Connectat");
+  lcd.setCursor(0, 1);
+  lcd.print("OK");
+
+  delay(2000);
+}
+
+void consultarHora() {
+
+  HTTPClient http;
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Consultant");
+  lcd.setCursor(0, 1);
+  lcd.print("Servidor...");
+
+  http.begin(url);
+
+  int codiResposta = http.GET();
+
+  if (codiResposta > 0) {
+
+    Serial.print("HTTP: ");
+    Serial.println(codiResposta);
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Resposta HTTP");
+    lcd.setCursor(0, 1);
+    lcd.print(codiResposta);
+
+  } else {
+
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Error HTTP");
+  }
+
+  http.end();
+}
 
 void setup() {
 
   Serial.begin(115200);
 
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println("Error OLED");
-    while(true);
-  }
+  lcd.init();
+  lcd.backlight();
 
-  display.clearDisplay();
+  lcd.setCursor(0, 0);
+  lcd.print("PROJECTE A013");
+  lcd.setCursor(0, 1);
+  lcd.print("ESP32 + LCD");
+
+  delay(3000);
+
+  connectarWiFi();
 }
 
 void loop() {
 
-  display.clearDisplay();
+  consultarHora();
 
-  display.drawRect(x, y, 20, 20, WHITE);
+  delay(5000);
 
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(x + 3, y + 7);
-  display.print("VG");
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("IP ESP32:");
 
-  x += velocitatX;
-  y += velocitatY;
+  lcd.setCursor(0, 1);
+  lcd.print(WiFi.localIP());
 
-  if (x <= 0 || x >= SCREEN_WIDTH - 20) {
-    velocitatX = -velocitatX;
-  }
-
-  if (y <= 0 || y >= SCREEN_HEIGHT - 20) {
-    velocitatY = -velocitatY;
-  }
-
-  display.display();
-
-  delay(20);
+  delay(5000);
 }
